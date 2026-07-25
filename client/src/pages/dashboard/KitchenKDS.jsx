@@ -4,6 +4,52 @@ import { useSocket } from "../../context/SocketContext";
 import { useAuth } from "../../context/AuthContext";
 import { ChefHat, Clock, CheckCircle2, AlertCircle, Play, Check } from "lucide-react";
 
+function playOrderChime() {
+  try {
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtx) return;
+    const ctx = new AudioCtx();
+    const now = ctx.currentTime;
+
+    const osc1 = ctx.createOscillator();
+    const gain1 = ctx.createGain();
+    osc1.type = "sine";
+    osc1.frequency.setValueAtTime(880, now);
+    gain1.gain.setValueAtTime(0.0001, now);
+    gain1.gain.exponentialRampToValueAtTime(0.18, now + 0.04);
+    gain1.gain.exponentialRampToValueAtTime(0.0001, now + 0.2);
+    osc1.connect(gain1);
+    gain1.connect(ctx.destination);
+    osc1.start(now);
+    osc1.stop(now + 0.2);
+
+    const osc2 = ctx.createOscillator();
+    const gain2 = ctx.createGain();
+    osc2.type = "sine";
+    osc2.frequency.setValueAtTime(1174.66, now + 0.16);
+    gain2.gain.setValueAtTime(0.0001, now + 0.16);
+    gain2.gain.exponentialRampToValueAtTime(0.18, now + 0.2);
+    gain2.gain.exponentialRampToValueAtTime(0.0001, now + 0.4);
+    osc2.connect(gain2);
+    gain2.connect(ctx.destination);
+    osc2.start(now + 0.16);
+    osc2.stop(now + 0.4);
+  } catch (e) {
+    // Audio context may be restricted before user gesture
+  }
+}
+
+function notifyNewOrder(order) {
+  playOrderChime();
+  if ("Notification" in window && Notification.permission === "granted") {
+    const tableStr = order.tableNumber ? `Table #${order.tableNumber}` : "Takeout";
+    const itemsStr = order.items.map((i) => `${i.qty}× ${i.name}`).join(", ");
+    new Notification(`New order · ${tableStr}`, {
+      body: itemsStr || "New order received!",
+    });
+  }
+}
+
 export default function KitchenKDS() {
   const { user } = useAuth();
   const { socket, joinRooms } = useSocket();
@@ -17,13 +63,15 @@ export default function KitchenKDS() {
     if (user?.restaurantId) {
       joinRooms([`restaurant:${user.restaurantId}`]);
     }
+    if ("Notification" in window && Notification.permission === "default") {
+      Notification.requestPermission();
+    }
   }, [user]);
 
   const fetchActiveOrders = async () => {
     try {
       setLoading(true);
       const res = await api.get("/manage/orders?active=1");
-      // Kitchen is concerned with placed, accepted, preparing
       const kitchenOrders = res.data.orders.filter((o) =>
         ["placed", "accepted", "preparing"].includes(o.status)
       );
@@ -40,6 +88,7 @@ export default function KitchenKDS() {
 
     const handleNew = (ord) => {
       if (["placed", "accepted", "preparing"].includes(ord.status)) {
+        notifyNewOrder(ord);
         setOrders((prev) => [ord, ...prev.filter((o) => o._id !== ord._id)]);
       }
     };
