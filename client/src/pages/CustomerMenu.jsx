@@ -39,12 +39,10 @@ export default function CustomerMenu() {
   const [vegFilter, setVegFilter] = useState("all"); // 'all' | 'veg' | 'nonveg'
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Cart State: array of { menuItemId, name, price, qty, notes, isVeg }
-  const [cart, setCart] = useState([]);
-  const [isCartOpen, setIsCartOpen] = useState(false);
+  // Group Ordering Shared Cart State
   const [tableNumber, setTableNumber] = useState(tableParam);
-  const [placingOrder, setPlacingOrder] = useState(false);
-  const [orderError, setOrderError] = useState("");
+  const [members, setMembers] = useState(1);
+  const sharedKey = restaurant?.id && tableNumber ? `${restaurant.id}:${tableNumber}` : "";
 
   // Fetch menu and load data
   useEffect(() => {
@@ -72,6 +70,26 @@ export default function CustomerMenu() {
     }
   };
 
+  // Socket listener for Group Ordering Shared Table Cart
+  useEffect(() => {
+    if (!socket || !sharedKey) return;
+
+    socket.emit("cart:join", { key: sharedKey });
+
+    const handleCartState = ({ key, lines, members: memberCount }) => {
+      if (key === sharedKey) {
+        setCart(lines || []);
+        if (typeof memberCount === "number") setMembers(memberCount);
+      }
+    };
+
+    socket.on("cart:state", handleCartState);
+
+    return () => {
+      socket.off("cart:state", handleCartState);
+    };
+  }, [socket, sharedKey]);
+
   // Socket listener for real-time 86'd items & menu changes
   useEffect(() => {
     if (!socket || !restaurant?.id) return;
@@ -82,13 +100,21 @@ export default function CustomerMenu() {
       );
       // Remove 86'd items from cart if out of stock
       if (!updatedItem.available) {
-        setCart((prev) => prev.filter((c) => c.menuItemId !== updatedItem._id));
+        if (sharedKey) {
+          socket.emit("cart:remove", { key: sharedKey, itemId: updatedItem._id });
+        } else {
+          setCart((prev) => prev.filter((c) => c.menuItemId !== updatedItem._id));
+        }
       }
     };
 
     const handleMenuRemove = (id) => {
       setItems((prev) => prev.filter((it) => it._id !== id));
-      setCart((prev) => prev.filter((c) => c.menuItemId !== id));
+      if (sharedKey) {
+        socket.emit("cart:remove", { key: sharedKey, itemId: id });
+      } else {
+        setCart((prev) => prev.filter((c) => c.menuItemId !== id));
+      }
     };
 
     socket.on("menu:update", handleMenuUpdate);
@@ -98,39 +124,36 @@ export default function CustomerMenu() {
       socket.off("menu:update", handleMenuUpdate);
       socket.off("menu:remove", handleMenuRemove);
     };
-  }, [socket, restaurant]);
+  }, [socket, restaurant, sharedKey]);
 
-  // Categories list
-  const categories = useMemo(() => {
-    const cats = Array.from(new Set(items.map((i) => i.category)));
-    return ["All", ...cats];
-  }, [items]);
-
-  // Filtered items
-  const filteredItems = useMemo(() => {
-    return items.filter((item) => {
-      const matchCat = activeCategory === "All" || item.category === activeCategory;
-      const matchVeg =
-        vegFilter === "all" ||
-        (vegFilter === "veg" && item.isVeg) ||
-        (vegFilter === "nonveg" && !item.isVeg);
-      const matchSearch =
-        !searchQuery ||
-        item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.description?.toLowerCase().includes(searchQuery.toLowerCase());
-      return matchCat && matchVeg && matchSearch;
-    });
-  }, [items, activeCategory, vegFilter, searchQuery]);
-
-  // Cart operations
+  // Cart operations (shared if sharedKey is active, solo otherwise)
   const updateQuantity = (item, delta) => {
+    const itemId = item._id || item.menuItemId;
+    if (sharedKey && socket) {
+      if (delta > 0) {
+        socket.emit("cart:add", {
+          key: sharedKey,
+          item: {
+            menuItemId: itemId,
+            name: item.name,
+            price: item.price,
+            isVeg: item.isVeg,
+            qty: 1,
+          },
+        });
+      } else {
+        socket.emit("cart:remove", { key: sharedKey, itemId });
+      }
+      return;
+    }
+
     setCart((prev) => {
-      const existing = prev.find((c) => c.menuItemId === item._id);
+      const existing = prev.find((c) => c.menuItemId === itemId);
       if (!existing && delta > 0) {
         return [
           ...prev,
           {
-            menuItemId: item._id,
+            menuItemId: itemId,
             name: item.name,
             price: item.price,
             isVeg: item.isVeg,
@@ -142,14 +165,24 @@ export default function CustomerMenu() {
       if (existing) {
         const newQty = existing.qty + delta;
         if (newQty <= 0) {
-          return prev.filter((c) => c.menuItemId !== item._id);
+          return prev.filter((c) => c.menuItemId !== itemId);
         }
         return prev.map((c) =>
-          c.menuItemId === item._id ? { ...c, qty: newQty } : c
+          c.menuItemId === itemId ? { ...c, qty: newQty } : c
         );
       }
       return prev;
     });
+  };
+
+  const updateItemNotes = (itemId, notes) => {
+    if (sharedKey && socket) {
+      socket.emit("cart:updateNotes", { key: sharedKey, itemId, notes });
+      return;
+    }
+    setCart((prev) =>
+      prev.map((c) => (c.menuItemId === itemId ? { ...c, notes } : c))
+    );
   };
 
   const getItemQty = (itemId) => {
@@ -189,6 +222,9 @@ export default function CustomerMenu() {
         tableNumber: Number(tableNumber),
       });
 
+      if (sharedKey && socket) {
+        socket.emit("cart:clear", { key: sharedKey });
+      }
       setCart([]);
       setIsCartOpen(false);
       navigate(`/r/${slug}/order/${res.data.order._id}`);
@@ -249,8 +285,16 @@ export default function CustomerMenu() {
             </div>
 
             {tableNumber && (
-              <div className="bg-saffron text-white px-3 py-1 rounded-xl text-xs font-bold font-heading shadow-sm flex items-center gap-1">
-                <span>Table #{tableNumber}</span>
+              <div className="flex flex-col items-end gap-1">
+                <div className="bg-saffron text-white px-3 py-1 rounded-xl text-xs font-bold font-heading shadow-sm flex items-center gap-1">
+                  <span>Table #{tableNumber}</span>
+                </div>
+                {members > 1 && (
+                  <div className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2.5 py-0.5 rounded-full text-[10px] font-semibold flex items-center gap-1 animate-pulse">
+                    <Users className="w-3 h-3" />
+                    <span>{members} phones sharing this cart</span>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -463,7 +507,16 @@ export default function CustomerMenu() {
               <div className="flex items-center justify-between pb-3 border-b border-paper-border">
                 <div className="flex items-center gap-2">
                   <ShoppingBag className="w-5 h-5 text-saffron" />
-                  <h2 className="font-heading font-bold text-lg text-ink">Your Order Summary</h2>
+                  <div>
+                    <h2 className="font-heading font-bold text-base text-ink">
+                      {tableNumber ? `Table #${tableNumber}'s Order` : "Your Order Summary"}
+                    </h2>
+                    {tableNumber && (
+                      <p className="text-[11px] text-ink-muted">
+                        Live shared table cart — items added on any device update in real-time
+                      </p>
+                    )}
+                  </div>
                 </div>
                 <button
                   onClick={() => setIsCartOpen(false)}
@@ -516,15 +569,8 @@ export default function CustomerMenu() {
                       <input
                         type="text"
                         placeholder="Add cooking notes (e.g. less spicy)..."
-                        value={item.notes}
-                        onChange={(e) => {
-                          const val = e.target.value;
-                          setCart((prev) =>
-                            prev.map((c) =>
-                              c.menuItemId === item.menuItemId ? { ...c, notes: val } : c
-                            )
-                          );
-                        }}
+                        value={item.notes || ""}
+                        onChange={(e) => updateItemNotes(item.menuItemId, e.target.value)}
                         className="flex-1 px-2.5 py-1 rounded-lg bg-white border border-paper-border text-[11px] text-ink focus:outline-none focus:ring-1 focus:ring-saffron"
                       />
 
