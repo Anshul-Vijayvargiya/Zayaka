@@ -66,6 +66,19 @@ export default function Login() {
     }
   };
 
+  const handleDemoLogin = async (demoEmail) => {
+    setError("");
+    setLoading(true);
+    try {
+      const data = await login(demoEmail, "Password@123");
+      redirectByRole(data.user.role);
+    } catch {
+      setError("Demo login failed. Did you run the seed?");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-paper flex flex-col">
       <Navbar />
@@ -87,6 +100,36 @@ export default function Login() {
               <span>{error}</span>
             </div>
           )}
+
+          {/* One-tap Demo Logins for Judges */}
+          <div className="mb-6 p-3.5 bg-saffron-pale rounded-2xl border border-saffron/20 space-y-2">
+            <span className="text-xs font-bold text-saffron font-heading block text-center">
+              ⚡ Trying the demo? One tap:
+            </span>
+            <div className="grid grid-cols-3 gap-2">
+              <button
+                type="button"
+                onClick={() => handleDemoLogin("owner@zayka.app")}
+                className="py-2 px-2 rounded-xl bg-white text-ink border border-saffron/30 font-heading font-bold text-xs hover:bg-saffron hover:text-white transition-all shadow-sm"
+              >
+                👑 Owner
+              </button>
+              <button
+                type="button"
+                onClick={() => handleDemoLogin("staff@zayka.app")}
+                className="py-2 px-2 rounded-xl bg-white text-ink border border-saffron/30 font-heading font-bold text-xs hover:bg-saffron hover:text-white transition-all shadow-sm"
+              >
+                🤵 Staff
+              </button>
+              <button
+                type="button"
+                onClick={() => handleDemoLogin("kitchen@zayka.app")}
+                className="py-2 px-2 rounded-xl bg-white text-ink border border-saffron/30 font-heading font-bold text-xs hover:bg-saffron hover:text-white transition-all shadow-sm"
+              >
+                👨‍🍳 Kitchen
+              </button>
+            </div>
+          </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
