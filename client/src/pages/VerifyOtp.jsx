@@ -10,6 +10,7 @@ export default function VerifyOtp() {
   const { verifyOtp, resendOtp } = useAuth();
 
   const [email] = useState(location.state?.email || "");
+  const from = location.state?.from;
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
   const [info, setInfo] = useState("");
@@ -27,7 +28,9 @@ export default function VerifyOtp() {
     try {
       const data = await verifyOtp(email, code);
       const role = data.user.role;
-      if (role === "kitchen") navigate("/app/kitchen");
+      // The page that sent the customer here always wins over role-based routing.
+      if (from) navigate(from, { replace: true });
+      else if (role === "kitchen") navigate("/app/kitchen");
       else if (["owner", "staff"].includes(role)) navigate("/app/orders");
       else navigate("/r/zayka-demo?table=4");
     } catch (err) {

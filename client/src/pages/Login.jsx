@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import Navbar from "../components/Navbar";
 import { Lock, Mail, ArrowRight, AlertCircle } from "lucide-react";
@@ -7,6 +7,8 @@ import { Lock, Mail, ArrowRight, AlertCircle } from "lucide-react";
 export default function Login() {
   const { login, googleLogin } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const from = location.state?.from;
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -23,7 +25,7 @@ export default function Login() {
           try {
             setLoading(true);
             const res = await googleLogin(response.credential);
-            redirectByRole(res.user.role);
+            redirectAfterAuth(res.user.role);
           } catch (err) {
             setError(err.message);
           } finally {
@@ -38,7 +40,13 @@ export default function Login() {
     }
   }, []);
 
-  const redirectByRole = (role) => {
+  const redirectAfterAuth = (role) => {
+    // The page that sent the customer here (e.g. the menu they were ordering
+    // from) always wins — role-based routing is only the fallback.
+    if (from) {
+      navigate(from, { replace: true });
+      return;
+    }
     if (role === "kitchen") {
       navigate("/app/kitchen");
     } else if (["owner", "staff"].includes(role)) {
@@ -54,10 +62,10 @@ export default function Login() {
     setLoading(true);
     try {
       const data = await login(email, password);
-      redirectByRole(data.user.role);
+      redirectAfterAuth(data.user.role);
     } catch (err) {
       if (err.message === "unverified" || err.response?.data?.error === "unverified") {
-        navigate("/verify-otp", { state: { email: email.toLowerCase() } });
+        navigate("/verify-otp", { state: { email: email.toLowerCase(), from } });
       } else {
         setError(err.message);
       }
@@ -71,7 +79,7 @@ export default function Login() {
     setLoading(true);
     try {
       const data = await login(demoEmail, "Password@123");
-      redirectByRole(data.user.role);
+      redirectAfterAuth(data.user.role);
     } catch {
       setError("Demo login failed. Did you run the seed?");
     } finally {
