@@ -3,7 +3,38 @@ import { QRCodeSVG } from "qrcode.react";
 import api, { errMsg } from "../../api/client";
 import { useSocket } from "../../context/SocketContext";
 import { useAuth } from "../../context/AuthContext";
-import { QrCode, Plus, Users, Printer, X, AlertCircle } from "lucide-react";
+import { QrCode, Plus, Users, Printer, X, AlertCircle, Copy, Check } from "lucide-react";
+
+function CopyLinkRow({ url, className = "" }) {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async (e) => {
+    e.stopPropagation();
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      // clipboard permission denied/unavailable — the URL is still visible to copy by hand
+    }
+  };
+
+  return (
+    <div className={`flex items-center gap-1.5 ${className}`} onClick={(e) => e.stopPropagation()}>
+      <span className="flex-1 min-w-0 truncate font-mono text-[10px] text-ink-muted bg-paper border border-paper-border rounded-lg px-2 py-1.5">
+        {url}
+      </span>
+      <button
+        type="button"
+        onClick={handleCopy}
+        className="flex-shrink-0 print:hidden flex items-center gap-1 text-[10px] font-semibold text-saffron border border-saffron/30 bg-saffron-pale hover:bg-saffron hover:text-white rounded-lg px-2.5 py-1.5 transition-colors"
+      >
+        {copied ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+        <span>{copied ? "Copied!" : "Copy link"}</span>
+      </button>
+    </div>
+  );
+}
 
 export default function TableManager() {
   const { user } = useAuth();
@@ -176,6 +207,8 @@ export default function TableManager() {
                     <QrCode className="w-3 h-3" /> Click to Print Standee
                   </span>
                 </div>
+
+                <CopyLinkRow url={qrUrl} />
               </div>
 
               {/* Status Controls */}
@@ -234,6 +267,8 @@ export default function TableManager() {
             <p className="text-xs text-ink-muted leading-relaxed font-medium">
               Scan this QR code with your smartphone camera to browse our menu and place your order.
             </p>
+
+            <CopyLinkRow url={getCustomerUrl(selectedTable.number)} />
 
             <div className="print:hidden pt-2">
               <button
