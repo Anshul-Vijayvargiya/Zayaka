@@ -3,12 +3,39 @@ import api, { errMsg } from "../api/client";
 
 const AuthContext = createContext(null);
 
+// A stray literal "undefined" string (or corrupt JSON) in localStorage must
+// never crash the app on boot — fall back to null instead of throwing.
+function safeGetToken(key) {
+  const raw = localStorage.getItem(key);
+  return raw && raw !== "undefined" && raw !== "null" ? raw : null;
+}
+
+function safeGetJSON(key) {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw && raw !== "undefined" ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+function safeSetItem(key, value) {
+  if (value === undefined || value === null) return;
+  localStorage.setItem(key, value);
+}
+
+function safeSetJSON(key, value) {
+  if (value === undefined || value === null) return;
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch {
+    // ignore quota/serialization errors — worst case, the cache misses
+  }
+}
+
 export function AuthProvider({ children }) {
-  const [token, setToken] = useState(() => localStorage.getItem("zayka_token") || null);
-  const [user, setUser] = useState(() => {
-    const cached = localStorage.getItem("zayka_user");
-    return cached ? JSON.parse(cached) : null;
-  });
+  const [token, setToken] = useState(() => safeGetToken("zayka_token"));
+  const [user, setUser] = useState(() => safeGetJSON("zayka_user"));
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -17,7 +44,7 @@ export function AuthProvider({ children }) {
         .get("/auth/me")
         .then((res) => {
           setUser(res.data.user);
-          localStorage.setItem("zayka_user", JSON.stringify(res.data.user));
+          safeSetJSON("zayka_user", res.data.user);
         })
         .catch(() => {
           logout();
@@ -31,8 +58,8 @@ export function AuthProvider({ children }) {
   const saveAuth = (newToken, newUser) => {
     setToken(newToken);
     setUser(newUser);
-    localStorage.setItem("zayka_token", newToken);
-    localStorage.setItem("zayka_user", JSON.stringify(newUser));
+    safeSetItem("zayka_token", newToken);
+    safeSetJSON("zayka_user", newUser);
   };
 
   const login = async (email, password) => {
