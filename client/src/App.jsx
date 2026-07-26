@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { SocketProvider } from "./context/SocketContext";
@@ -46,6 +46,13 @@ function ProtectedRoute({ children, roles }) {
 }
 
 export default function App() {
+  useEffect(() => {
+    // Force the correct tab title on every load — guards against a browser
+    // tab left open from before a title fix, or from a different project
+    // that previously ran on this same dev-server port.
+    document.title = "Zayka — Scan. See. Order.";
+  }, []);
+
   return (
     <AuthProvider>
       <SocketProvider>
