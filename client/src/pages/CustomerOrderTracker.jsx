@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
+import { QRCodeSVG } from "qrcode.react";
 import api, { errMsg } from "../api/client";
 import { useSocket } from "../context/SocketContext";
 import VegBadge from "../components/VegBadge";
@@ -13,6 +14,9 @@ import {
   ArrowLeft,
   AlertCircle,
   Sparkles,
+  Wallet,
+  Star,
+  QrCode,
 } from "lucide-react";
 
 const STEPS = [
@@ -21,6 +25,7 @@ const STEPS = [
   { key: "preparing", label: "Preparing", icon: ChefHat, desc: "Chef is cooking" },
   { key: "ready", label: "Ready", icon: Bell, desc: "Ready for table" },
   { key: "served", label: "Served", icon: Utensils, desc: "Served at table" },
+  { key: "paid", label: "Paid", icon: Wallet, desc: "Bill settled" },
 ];
 
 export default function CustomerOrderTracker() {
@@ -30,6 +35,8 @@ export default function CustomerOrderTracker() {
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [hoverStar, setHoverStar] = useState(0);
+  const [ratingSubmitting, setRatingSubmitting] = useState(false);
 
   useEffect(() => {
     fetchOrder();
@@ -54,6 +61,19 @@ export default function CustomerOrderTracker() {
       setError(errMsg(err));
     } finally {
       setLoading(false);
+    }
+  };
+
+  const submitRating = async (value) => {
+    if (ratingSubmitting || order?.rating) return;
+    setRatingSubmitting(true);
+    try {
+      const res = await api.patch(`/public/${slug}/orders/${order._id}/rating`, { rating: value });
+      setOrder(res.data.order);
+    } catch (err) {
+      setError(errMsg(err));
+    } finally {
+      setRatingSubmitting(false);
     }
   };
 
@@ -103,6 +123,8 @@ export default function CustomerOrderTracker() {
   }
 
   const currentStepIndex = STEPS.findIndex((s) => s.key === order.status);
+  const shortId = order._id.slice(-6).toUpperCase();
+  const upiUrl = `upi://pay?pa=zayka.demo@upi&pn=Zayka%20Demo%20Kitchen&am=${order.total}&cu=INR&tn=Order%20${shortId}`;
 
   return (
     <div className="min-h-screen bg-paper flex flex-col items-center p-4">
@@ -226,6 +248,76 @@ export default function CustomerOrderTracker() {
             </div>
           </div>
         </div>
+
+        {/* Time to Pay — UPI intent QR, shown once food is served. Payment
+            confirmation stays manual: staff taps "Mark paid" on the
+            dashboard after receiving money (real gateway = future work). */}
+        {order.status === "served" && (
+          <div className="p-4 rounded-2xl bg-paper border border-paper-border text-center space-y-3">
+            <span className="font-heading font-bold text-sm text-ink flex items-center justify-center gap-1.5">
+              <QrCode className="w-4 h-4 text-saffron" /> Time to Pay
+            </span>
+
+            <div className="flex justify-center">
+              <div className="p-3 bg-white rounded-2xl border border-paper-border">
+                <QRCodeSVG value={upiUrl} size={168} includeMargin={false} />
+              </div>
+            </div>
+
+            <p className="text-[11px] text-ink-muted">
+              Scan with any UPI app — GPay, PhonePe, Paytm
+            </p>
+            <p className="text-[11px] text-ink-muted border-t border-paper-border pt-3">
+              Paying cash at the counter? Just let your waiter know — they'll
+              mark the bill settled once it's received.
+            </p>
+          </div>
+        )}
+
+        {/* Paid — thank-you + one-tap rating */}
+        {order.status === "paid" && (
+          <div className="p-4 rounded-2xl bg-paper border border-paper-border text-center space-y-3">
+            <div className="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto">
+              <CheckCircle2 className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="font-heading font-bold text-sm text-ink">Paid — thank you!</p>
+              <p className="text-[11px] text-ink-muted mt-0.5">
+                ₹{order.total} settled. Hope you enjoyed the meal.
+              </p>
+            </div>
+
+            {order.rating ? (
+              <p className="text-xs font-semibold text-saffron">
+                You rated this visit {order.rating} / 5 — thanks for the feedback!
+              </p>
+            ) : (
+              <div className="space-y-1.5">
+                <p className="text-[11px] text-ink-muted">Rate your visit</p>
+                <div className="flex items-center justify-center gap-1">
+                  {[1, 2, 3, 4, 5].map((n) => (
+                    <button
+                      key={n}
+                      type="button"
+                      disabled={ratingSubmitting}
+                      onClick={() => submitRating(n)}
+                      onMouseEnter={() => setHoverStar(n)}
+                      onMouseLeave={() => setHoverStar(0)}
+                      className="p-1 disabled:opacity-50"
+                      aria-label={`Rate ${n} star${n > 1 ? "s" : ""}`}
+                    >
+                      <Star
+                        className={`w-6 h-6 transition-colors ${
+                          n <= hoverStar ? "fill-saffron text-saffron" : "text-ink-muted"
+                        }`}
+                      />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
       </div>
     </div>

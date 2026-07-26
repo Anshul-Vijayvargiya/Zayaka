@@ -116,6 +116,22 @@ router.get("/:slug/my-orders", requireAuth, findRestaurant, async (req, res) => 
   res.json({ orders });
 });
 
+// Rate a paid order — public + order-scoped (no login needed to submit; the
+// order ID is the only key, same trust model as the waitlist routes below)
+router.patch("/:slug/orders/:id/rating", findRestaurant, async (req, res) => {
+  const rating = Number(req.body.rating);
+  if (!Number.isInteger(rating) || rating < 1 || rating > 5)
+    return res.status(400).json({ error: "Rating must be a whole number between 1 and 5." });
+
+  const order = await Order.findOneAndUpdate(
+    { _id: req.params.id, restaurantId: req.restaurant._id, status: "paid" },
+    { rating },
+    { new: true }
+  );
+  if (!order) return res.status(404).json({ error: "Order not found or not yet paid." });
+  res.json({ order });
+});
+
 // Waitlist: join, check position
 router.post("/:slug/waitlist", findRestaurant, async (req, res) => {
   const { name, phone, partySize } = req.body;

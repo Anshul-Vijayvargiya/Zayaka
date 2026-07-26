@@ -99,6 +99,7 @@ const orderSchema = new Schema(
     total: Number,
     placedAt: { type: Date, default: Date.now, index: true },
     paidAt: Date,
+    rating: { type: Number, min: 1, max: 5 },
   },
   { timestamps: true }
 );
