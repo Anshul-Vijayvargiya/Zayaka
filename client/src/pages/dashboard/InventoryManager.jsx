@@ -105,6 +105,20 @@ export default function InventoryManager() {
       )}
 
       {/* Inventory Grid */}
+      {!loading && items.length === 0 ? (
+        <div className="p-10 rounded-3xl border border-paper-border bg-paper-card text-center space-y-2">
+          <p className="text-sm text-ink-muted">
+            No stock items tracked yet — add ingredients to get low-stock alerts.
+          </p>
+          <button
+            onClick={handleOpenAdd}
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-saffron hover:bg-saffron-hover text-white font-heading font-bold text-xs shadow-md transition-all"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Add Stock Item</span>
+          </button>
+        </div>
+      ) : (
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
         {items.map((item) => {
           const isLow = item.quantity <= item.lowThreshold;
@@ -157,6 +171,7 @@ export default function InventoryManager() {
           );
         })}
       </div>
+      )}
 
       {/* Add / Edit Modal */}
       {isModalOpen && (

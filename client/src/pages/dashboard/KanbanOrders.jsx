@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import api, { errMsg } from "../../api/client";
 import { useSocket } from "../../context/SocketContext";
 import { useAuth } from "../../context/AuthContext";
+import OnboardingChecklist from "../../components/OnboardingChecklist";
 import {
   Clock,
   CheckCircle2,
@@ -13,6 +15,7 @@ import {
   Filter,
   AlertCircle,
   RefreshCw,
+  QrCode,
 } from "lucide-react";
 
 const COLUMNS = [
@@ -161,6 +164,8 @@ export default function KanbanOrders() {
 
   return (
     <div className="space-y-6">
+      <OnboardingChecklist restaurantId={user?.restaurantId} />
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-paper-border">
         <div>
@@ -198,6 +203,21 @@ export default function KanbanOrders() {
         <div className="p-4 rounded-2xl bg-red-50 text-red-700 text-xs flex items-center gap-2 border border-red-200">
           <AlertCircle className="w-4 h-4 flex-shrink-0" />
           <span>{error}</span>
+        </div>
+      )}
+
+      {!loading && orders.length === 0 && (
+        <div className="p-6 rounded-2xl border border-paper-border bg-paper-card text-center space-y-2">
+          <p className="text-sm text-ink-muted">
+            No active orders yet — they'll appear here the moment a diner places one.
+          </p>
+          <Link
+            to="/app/tables"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-saffron hover:underline"
+          >
+            <QrCode className="w-3.5 h-3.5" />
+            <span>Print your table QRs</span>
+          </Link>
         </div>
       )}
 

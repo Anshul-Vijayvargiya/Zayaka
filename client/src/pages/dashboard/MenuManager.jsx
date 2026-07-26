@@ -179,6 +179,24 @@ export default function MenuManager() {
       )}
 
       {/* Menu Items Table */}
+      {!loading && filteredItems.length === 0 ? (
+        <div className="p-10 rounded-3xl border border-paper-border bg-paper-card text-center space-y-2">
+          <p className="text-sm text-ink-muted">
+            {items.length === 0
+              ? "Your menu is empty — add your first dish to go live."
+              : "No items match your search."}
+          </p>
+          {items.length === 0 && (
+            <button
+              onClick={handleOpenAdd}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-saffron hover:bg-saffron-hover text-white font-heading font-bold text-xs shadow-md transition-all"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Add Your First Dish</span>
+            </button>
+          )}
+        </div>
+      ) : (
       <div className="bg-paper-card rounded-3xl border border-paper-border shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs text-ink">
@@ -263,6 +281,7 @@ export default function MenuManager() {
           </table>
         </div>
       </div>
+      )}
 
       {/* Add / Edit Modal */}
       {isModalOpen && (
