@@ -1,6 +1,7 @@
 import axios from "axios";
 
-const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+const API_ORIGIN = import.meta.env.VITE_API_URL || "http://localhost:5000";
+const API_BASE = `${API_ORIGIN}/api`;
 
 const api = axios.create({
   baseURL: API_BASE,
@@ -21,7 +22,7 @@ export function errMsg(error) {
   if (typeof error === "string") return error;
   if (error?.response?.data?.error) return error.response.data.error;
   if (error?.message === "Network Error") {
-    return "Cannot connect to Zayka server. Please ensure the backend server is running on http://localhost:5000.";
+    return `Cannot connect to Zayka server. Please ensure the backend server is running at ${API_ORIGIN}.`;
   }
   if (error?.message) return error.message;
   return "An unexpected error occurred. Please try again.";
