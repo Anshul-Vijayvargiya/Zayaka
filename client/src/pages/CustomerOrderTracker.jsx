@@ -124,7 +124,7 @@ export default function CustomerOrderTracker() {
 
   const currentStepIndex = STEPS.findIndex((s) => s.key === order.status);
   const shortId = order._id.slice(-6).toUpperCase();
-  const upiUrl = `upi://pay?pa=zayka.demo@upi&pn=Zayka%20Demo%20Kitchen&am=${order.total}&cu=INR&tn=Order%20${shortId}`;
+  const upiUrl = `upi://pay?pa=pay.zayka@upi&pn=Zayka&am=${order.total}&cu=INR&tn=Order%20${shortId}`;
 
   return (
     <div className="min-h-screen bg-paper flex flex-col items-center p-4">

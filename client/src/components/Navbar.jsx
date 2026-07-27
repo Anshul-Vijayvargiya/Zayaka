@@ -26,11 +26,11 @@ export default function Navbar() {
 
         <div className="flex items-center gap-3">
           <Link
-            to="/r/zayka-demo?table=4"
+            to="/r/spice-route?table=4"
             className="text-xs sm:text-sm font-semibold text-ink hover:text-saffron transition-colors px-3 py-1.5 rounded-xl hover:bg-paper-border/50 flex items-center gap-1.5"
           >
             <UtensilsCrossed className="w-4 h-4 text-saffron" />
-            <span>Demo Customer Menu</span>
+            <span>Customer Menu</span>
           </Link>
 
           {user ? (

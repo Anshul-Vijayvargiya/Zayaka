@@ -32,7 +32,7 @@ export default function VerifyOtp() {
       if (from) navigate(from, { replace: true });
       else if (role === "kitchen") navigate("/app/kitchen");
       else if (["owner", "staff"].includes(role)) navigate("/app/orders");
-      else navigate("/r/zayka-demo?table=4");
+      else navigate("/r/spice-route?table=4");
     } catch (err) {
       setError(err.message);
     } finally {

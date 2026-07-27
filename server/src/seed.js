@@ -93,16 +93,16 @@ async function run() {
   ]);
 
   const restaurant = await Restaurant.create({
-    name: "Zayka Demo Kitchen",
-    slug: "zayka-demo",
+    name: "Spice Route Kitchen",
+    slug: "spice-route",
     tagline: "Bhopal's smartest dining room",
     address: "MP Nagar Zone 1, Bhopal",
   });
 
   const hash = await bcrypt.hash("Password@123", 10);
   const [owner] = await User.create([
-    { name: "Anshul (Owner)", email: "owner@zayka.app", passwordHash: hash, role: "owner", restaurantId: restaurant._id, verified: true },
-    { name: "Ravi (Waiter)", email: "staff@zayka.app", passwordHash: hash, role: "staff", restaurantId: restaurant._id, verified: true },
+    { name: "Anshul Vijayvargiya", email: "owner@zayka.app", passwordHash: hash, role: "owner", restaurantId: restaurant._id, verified: true },
+    { name: "Ravi Kumar", email: "staff@zayka.app", passwordHash: hash, role: "staff", restaurantId: restaurant._id, verified: true },
     { name: "Chef Meena", email: "kitchen@zayka.app", passwordHash: hash, role: "kitchen", restaurantId: restaurant._id, verified: true },
   ]);
 
@@ -138,7 +138,7 @@ async function run() {
     }))
   );
 
-  // Seed sample waitlist entries
+  // Seed waitlist entries
   await Waitlist.insertMany([
     { restaurantId: restaurant._id, name: "Vikram Sharma", phone: "9876543210", partySize: 4, status: "waiting" },
     { restaurantId: restaurant._id, name: "Neha Gupta", phone: "9812345678", partySize: 2, status: "notified" },
@@ -179,7 +179,7 @@ async function run() {
     }
   }
 
-  // Live orders for the demo
+  // Live orders for today
   const liveStatuses = ["placed", "accepted", "preparing", "ready"];
   for (let i = 0; i < 5; i++) {
     const m1 = pickWeighted(menuItems);
@@ -210,7 +210,7 @@ async function run() {
   console.log("  staff@zayka.app   -> dashboard (staff view)");
   console.log("  kitchen@zayka.app -> kitchen board");
   console.log("  aarav@example.com -> customer");
-  console.log("\nCustomer menu: /r/zayka-demo?table=4");
+  console.log("\nCustomer menu: /r/spice-route?table=4");
   await mongoose.disconnect();
 }
 

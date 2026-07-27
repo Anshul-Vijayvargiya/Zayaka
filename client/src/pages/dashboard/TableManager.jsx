@@ -111,7 +111,7 @@ export default function TableManager() {
 
   const getCustomerUrl = (tableNum) => {
     const origin = window.location.origin;
-    const slug = restaurant?.slug || "zayka-demo";
+    const slug = restaurant?.slug || "spice-route";
     return `${origin}/r/${slug}?table=${tableNum}`;
   };
 

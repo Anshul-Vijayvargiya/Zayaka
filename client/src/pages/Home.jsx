@@ -370,11 +370,11 @@ export default function Home() {
 
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 mt-8">
               <Link
-                to="/r/zayka-demo?table=4"
+                to="/r/spice-route?table=4"
                 className="w-full sm:w-auto px-7 py-3.5 rounded-2xl bg-saffron hover:bg-saffron-hover text-white font-heading font-bold text-sm shadow-lg shadow-saffron/20 transition-all flex items-center justify-center gap-2 group"
               >
                 <Utensils className="w-4 h-4" />
-                <span>Try the diner experience</span>
+                <span>See the diner experience</span>
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </Link>
               <Link
@@ -388,7 +388,7 @@ export default function Home() {
 
             <div className="flex items-center gap-2 mt-6 text-xs text-ink-muted font-medium">
               <span className="w-1.5 h-1.5 rounded-full bg-saffron animate-pulse" />
-              <span>Built for VibeAthon 6.0 · Live demo, real data</span>
+              <span>Live now · Real-time orders, real data</span>
             </div>
           </div>
 
@@ -402,7 +402,7 @@ export default function Home() {
       <section className="py-8 border-y border-paper-border">
         <Reveal>
           <p className="max-w-6xl mx-auto px-5 text-center text-xs sm:text-sm font-medium text-ink/60">
-            1 demo kitchen · 22 dishes · 500+ seeded orders · 4 roles · real-time everything
+            Live menus · Real-time orders · AI insights · Multi-outlet ready
           </p>
         </Reveal>
       </section>
@@ -413,7 +413,7 @@ export default function Home() {
           mockup={<PhoneMenuMockup />}
           heading="Scan. See. Order."
           copy="The menu goes live the second the kitchen 86's a dish — every phone at the table sees it disappear instantly, no refresh, no stale QR codes."
-          linkTo="/r/zayka-demo?table=4"
+          linkTo="/r/spice-route?table=4"
           linkLabel="Try the live menu"
         />
         <TourRow
@@ -487,8 +487,6 @@ export default function Home() {
               </Reveal>
             ))}
           </div>
-
-          <p className="text-center text-xs text-ink-muted mt-8">Demo pricing for hackathon evaluation.</p>
         </div>
       </section>
 
@@ -510,11 +508,11 @@ export default function Home() {
               See it live in 30 seconds.
             </h2>
             <Link
-              to="/r/zayka-demo?table=4"
+              to="/r/spice-route?table=4"
               className="inline-flex items-center gap-2 px-7 py-3.5 rounded-2xl bg-saffron hover:bg-saffron-hover text-white font-heading font-bold text-sm shadow-lg shadow-saffron/30 transition-all group"
             >
               <Utensils className="w-4 h-4" />
-              <span>Try the demo menu</span>
+              <span>Try the live menu</span>
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
             </Link>
           </div>
@@ -534,15 +532,15 @@ export default function Home() {
             <p className="text-sm text-ink-muted leading-relaxed max-w-xs">
               The dine-in operating system — live menus, real-time orders, and an AI that knows your numbers.
             </p>
-            <p className="text-xs text-ink-muted mt-4">Built for VibeAthon 6.0 · Made in Bhopal, India ♥</p>
+            <p className="text-xs text-ink-muted mt-4">Made in Bhopal, India ♥</p>
           </div>
 
           <div>
             <h4 className="font-heading font-semibold text-sm text-ink mb-3">Product</h4>
             <ul className="space-y-2 text-sm text-ink-muted">
               <li>
-                <Link to="/r/zayka-demo?table=4" className="hover:text-saffron transition-colors">
-                  Demo menu
+                <Link to="/r/spice-route?table=4" className="hover:text-saffron transition-colors">
+                  Customer menu
                 </Link>
               </li>
               <li>
@@ -564,7 +562,7 @@ export default function Home() {
         </div>
 
         <div className="max-w-6xl mx-auto px-5 mt-10 pt-6 border-t border-paper-border text-xs text-ink-muted/70 text-center">
-          © 2026 Zayka — demo product
+          © 2026 Zayka
         </div>
       </footer>
     </div>

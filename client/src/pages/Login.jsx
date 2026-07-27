@@ -52,7 +52,7 @@ export default function Login() {
     } else if (["owner", "staff"].includes(role)) {
       navigate("/app/orders");
     } else {
-      navigate("/r/zayka-demo?table=4");
+      navigate("/r/spice-route?table=4");
     }
   };
 
@@ -81,7 +81,7 @@ export default function Login() {
       const data = await login(demoEmail, "Password@123");
       redirectAfterAuth(data.user.role);
     } catch {
-      setError("Demo login failed. Did you run the seed?");
+      setError("Sign-in failed. Did you run the seed script?");
     } finally {
       setLoading(false);
     }
@@ -109,10 +109,13 @@ export default function Login() {
             </div>
           )}
 
-          {/* One-tap Demo Logins for Judges */}
+          {/* Quick access workspace logins */}
           <div className="mb-6 p-3.5 bg-saffron-pale rounded-2xl border border-saffron/20 space-y-2">
             <span className="text-xs font-bold text-saffron font-heading block text-center">
-              ⚡ Trying the demo? One tap:
+              Quick access
+            </span>
+            <span className="text-[11px] text-ink-muted block text-center -mt-1">
+              Sign in to a workspace
             </span>
             <div className="grid grid-cols-3 gap-2">
               <button
